@@ -25,7 +25,6 @@ This repository contains infrastructure-as-code and GitHub Actions workflows to 
 4. **GitHub Actions Secrets**:
    - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`: Your AWS credentials for deploying resources.
    - `AWS_ACCOUNT_ID`: Your AWS account ID.
-   - `AWS_REGION`: Set to `eu-central-1` (Frankfurt) as per the project configuration.
 
 ## Setup Instructions
 
@@ -52,4 +51,4 @@ curl https://<lambda-function-url>
 Ensure the following secrets are set up in your GitHub repository:
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
-- `AWS_REGION` - optional
+- `AWS_ACCOUNT_ID`
