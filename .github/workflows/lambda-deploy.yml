@@ -1,0 +1,28 @@
+name: Deploy Lambda Function
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Docker image version'
+        required: false
+        default: 'latest'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: <region>
+
+      - name: Deploy Lambda function
+        run: |
+          aws lambda update-function-code --function-name lambda-s3-file-reader --image-uri <account-id>.dkr.ecr.<region>.amazonaws.com/lambda-s3-file-reader-repo:${{ github.event.inputs.version }}
