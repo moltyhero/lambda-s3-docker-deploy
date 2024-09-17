@@ -1,10 +1,10 @@
-name: Deploy Lambda Function
+name: Deploy Lambda
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Docker image version'
+        description: 'Lambda image version (defaults to latest)'
         required: false
         default: 'latest'
 
@@ -16,13 +16,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: <region>
+          aws-region: eu-central-1
 
-      - name: Deploy Lambda function
-        run: |
-          aws lambda update-function-code --function-name lambda-s3-file-reader --image-uri <account-id>.dkr.ecr.<region>.amazonaws.com/lambda-s3-file-reader-repo:${{ github.event.inputs.version }}
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Plan Terraform deployment
+        env:
+          IMAGE_VERSION: ${{ github.event.inputs.version }}
+        run: terraform plan -var "image_version=${{ env.IMAGE_VERSION }}"
+
+      - name: Apply Terraform deployment
+        env:
+          IMAGE_VERSION: ${{ github.event.inputs.version }}
+        run: terraform apply -var "image_version=${{ env.IMAGE_VERSION }}" -auto-approve
