@@ -2,6 +2,11 @@ provider "aws" {
   region = "eu-central-1"  # Set the region to Frankfurt
 }
 
+variable "image_version" {
+  description = "The version tag for the Docker image in ECR"
+  default     = "latest"
+}
+
 # S3 Bucket for storing files
 resource "aws_s3_bucket" "lambda_bucket" {
   bucket = "lambda-s3-file-reader-bucket"  # Meaningful, globally unique bucket name
@@ -57,7 +62,7 @@ resource "aws_lambda_function" "lambda_function" {
   package_type  = "Image"
 
   # Reference the ECR image URI
-  image_uri = "${aws_ecr_repository.lambda_repository.repository_url}:latest"
+  image_uri = "${aws_ecr_repository.lambda_repository.repository_url}:${var.image_version}"
 
   environment {
     variables = {
