@@ -50,7 +50,7 @@ resource "aws_iam_role" "lambda_execution_role" {
 # IAM Policy granting Lambda access to S3 bucket
 resource "aws_iam_role_policy" "s3_policy" {
   name   = "lambda-s3-read-access-policy"  # Descriptive policy name
-  role   = aws_iam_role.lambda_execution_role[count.index].id
+  role   = length(data.aws_iam_role.existing_role.id) == 0 ? aws_iam_role.lambda_execution_role[0].id : data.aws_iam_role.existing_role.id
   policy = jsonencode({
     Version = "2012-10-17",  # Policy version, keeping it default
     Statement = [
@@ -78,15 +78,15 @@ resource "aws_ecr_repository" "lambda_repository" {
 # Lambda Function using the Docker image from ECR
 resource "aws_lambda_function" "lambda_function" {
   function_name = "lambda-s3-file-reader"
-  role          = aws_iam_role.lambda_execution_role[count.index].arn
+  role          = length(data.aws_iam_role.existing_role.id) == 0 ? aws_iam_role.lambda_execution_role[0].arn : data.aws_iam_role.existing_role.arn
   package_type  = "Image"
 
   # Reference the ECR image URI
-  image_uri = "${aws_ecr_repository.lambda_repository[count.index].repository_url}:${var.image_version}"
+  image_uri = length(data.aws_ecr_repository.existing_repository.id) == 0 ? "${aws_ecr_repository.lambda_repository[0].repository_url}:${var.image_version}" : "${data.aws_ecr_repository.existing_repository.repository_url}:${var.image_version}"
 
   environment {
     variables = {
-      S3_BUCKET = aws_s3_bucket.lambda_bucket[count.index].bucket
+      S3_BUCKET = length(data.aws_s3_bucket.existing_bucket.id) == 0 ? aws_s3_bucket.lambda_bucket[0].bucket : data.aws_s3_bucket.existing_bucket.bucket
     }
   }
 }
