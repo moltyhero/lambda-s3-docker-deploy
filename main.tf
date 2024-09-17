@@ -7,9 +7,23 @@ variable "image_version" {
   default     = "latest"
 }
 
+# Data sources to check for existing resources
+data "aws_s3_bucket" "existing_bucket" {
+  bucket = "lambda-s3-file-reader-bucket"
+}
+
+data "aws_iam_role" "existing_role" {
+  name = "lambda-s3-file-reader-execution-role"
+}
+
+data "aws_ecr_repository" "existing_repository" {
+  name = "lambda-s3-file-reader-repo"
+}
+
 # S3 Bucket for storing files
 resource "aws_s3_bucket" "lambda_bucket" {
   bucket = "lambda-s3-file-reader-bucket"  # Meaningful, globally unique bucket name
+  count  = length(data.aws_s3_bucket.existing_bucket.id) == 0 ? 1 : 0
 
   lifecycle {
     prevent_destroy = true
@@ -18,8 +32,9 @@ resource "aws_s3_bucket" "lambda_bucket" {
 
 # IAM Role for Lambda execution
 resource "aws_iam_role" "lambda_execution_role" {
-  name = "lambda-s3-file-reader-execution-role"  # Meaningful role name
-  
+  name  = "lambda-s3-file-reader-execution-role"  # Meaningful role name
+  count = length(data.aws_iam_role.existing_role.id) == 0 ? 1 : 0
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17",  # Policy version, keeping it default
     Statement = [{
@@ -56,7 +71,8 @@ resource "aws_iam_role_policy" "s3_policy" {
 
 # ECR Repository for Docker image
 resource "aws_ecr_repository" "lambda_repository" {
-  name = "lambda-s3-file-reader-repo"
+  name  = "lambda-s3-file-reader-repo"
+  count = length(data.aws_ecr_repository.existing_repository.id) == 0 ? 1 : 0
 }
 
 # Lambda Function using the Docker image from ECR
