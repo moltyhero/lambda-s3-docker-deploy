@@ -75,6 +75,48 @@ resource "aws_ecr_repository" "lambda_repository" {
   count = length(data.aws_ecr_repository.existing_repository.id) == 0 ? 1 : 0
 }
 
+# ECR Repository Policy
+resource "aws_ecr_repository_policy" "lambda_ecr_policy" {
+  repository = aws_ecr_repository.lambda_repository.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "LambdaECRImageRetrievalPolicy",
+        Effect    = "Allow",
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        },
+        Action    = [
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer"
+        ]
+      }
+    ]
+  })
+}
+
+# IAM Policy for Lambda to access ECR
+resource "aws_iam_role_policy" "lambda_ecr_access_policy" {
+  name = "lambda-ecr-access-policy"
+  role = aws_iam_role.lambda_execution_role.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # Lambda Function using the Docker image from ECR
 resource "aws_lambda_function" "lambda_function" {
   function_name = "lambda-s3-file-reader"
