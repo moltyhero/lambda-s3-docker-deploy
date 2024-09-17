@@ -31,9 +31,15 @@ resource "aws_iam_role_policy" "s3_policy" {
     Version = "2012-10-17",  # Policy version, keeping it default
     Statement = [
       {
-        Action = ["s3:GetObject"],  # Allow read access to S3 objects
-        Effect = "Allow",
-        Resource = "arn:aws:s3:::${aws_s3_bucket.lambda_bucket.bucket_name}/*"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "arn:aws:s3:::lambda-s3-file-reader-bucket",
+          "arn:aws:s3:::lambda-s3-file-reader-bucket/*"
+        ]
       }
     ]
   })
@@ -41,15 +47,25 @@ resource "aws_iam_role_policy" "s3_policy" {
 
 # ECR Repository for Docker image
 resource "aws_ecr_repository" "lambda_repository" {
-  name = "lambda-s3-file-reader-repo"  # Unique ECR repository name
+  name = "lambda-s3-file-reader-repo"
 }
 
 # Lambda Function using the Docker image from ECR
 resource "aws_lambda_function" "lambda_function" {
-  function_name = "lambda-s3-file-reader"  # Meaningful Lambda function name
-  image_uri     = "${aws_ecr_repository.lambda_repository.repository_url}:latest"
+  function_name = "lambda-s3-file-reader"
   role          = aws_iam_role.lambda_execution_role.arn
+  package_type  = "Image"
+
+  # Reference the ECR image URI
+  image_uri = "${aws_ecr_repository.lambda_repository.repository_url}:latest"
+
+  environment {
+    variables = {
+      S3_BUCKET = aws_s3_bucket.lambda_bucket.bucket
+    }
+  }
 }
+
 
 # Lambda Function URL to access the Lambda via HTTP
 resource "aws_lambda_function_url" "lambda_function_url" {
