@@ -10,6 +10,10 @@ variable "image_version" {
 # S3 Bucket for storing files
 resource "aws_s3_bucket" "lambda_bucket" {
   bucket = "lambda-s3-file-reader-bucket"  # Meaningful, globally unique bucket name
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # IAM Role for Lambda execution
@@ -70,7 +74,6 @@ resource "aws_lambda_function" "lambda_function" {
     }
   }
 }
-
 
 # Lambda Function URL to access the Lambda via HTTP
 resource "aws_lambda_function_url" "lambda_function_url" {
