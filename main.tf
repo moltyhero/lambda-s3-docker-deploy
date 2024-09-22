@@ -77,7 +77,8 @@ resource "aws_ecr_repository" "lambda_repository" {
 
 # ECR Repository Policy
 resource "aws_ecr_repository_policy" "lambda_ecr_policy" {
-  repository = aws_ecr_repository.lambda_repository.name
+  count = 1
+  repository = aws_ecr_repository.lambda_repository[count.index].name
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -99,8 +100,9 @@ resource "aws_ecr_repository_policy" "lambda_ecr_policy" {
 
 # IAM Policy for Lambda to access ECR
 resource "aws_iam_role_policy" "lambda_ecr_access_policy" {
+  count = 1
   name = "lambda-ecr-access-policy"
-  role = aws_iam_role.lambda_execution_role.name
+  role = aws_iam_role.lambda_execution_role[count.index].name
 
   policy = jsonencode({
     Version = "2012-10-17",
