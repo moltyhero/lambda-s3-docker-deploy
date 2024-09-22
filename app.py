@@ -5,8 +5,8 @@ import os
 s3_client = boto3.client('s3')
 
 def lambda_handler(event, context):
-    bucket_name = os.getenv('BUCKET_NAME')
-    file_key = os.getenv('FILE_KEY')  # This should be passed in the request
+    bucket_name = os.getenv('S3_BUCKET')
+    file_key = event.get('queryStringParameters', {}).get('file_key')  # Get file_key from request
 
     try:
         response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
