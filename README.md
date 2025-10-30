@@ -8,8 +8,8 @@ This repository contains infrastructure-as-code and GitHub Actions workflows to 
 - **Docker Image**: The Lambda function runs using a Docker image stored in ECR.
 - **Infrastructure as Code**: Terraform is used to provision all AWS resources (S3 bucket, Lambda function, IAM roles, and ECR repository).
 - **GitHub Actions**:
-  - **Docker Build and Push**: Builds and pushes the Docker image to ECR upon merge to `master`.
-  - **Lambda Deployment**: Manually deploy a new version of the Lambda function with a specified Docker image tag (or defaults to `latest`).
+  - **Docker Build and Push**: Builds and pushes the Docker image to ECR when a PR is merged to `main`.
+  - **Lambda Deployment**: Manually deploy the Lambda function via GitHub Actions workflow.
 
 ## Project Structure
 
@@ -19,36 +19,145 @@ This repository contains infrastructure-as-code and GitHub Actions workflows to 
 
 ## Prerequisites
 
-1. **AWS CLI** configured with access to your AWS account.
-2. **Terraform** installed on your local machine.
-3. **Docker** installed and running locally.
-4. **GitHub Actions Secrets**:
-   - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`: Your AWS credentials for deploying resources.
-   - `AWS_ACCOUNT_ID`: Your AWS account ID.
+1. **GitHub Account** with access to GitHub Actions.
+2. **AWS Account** with programmatic access (access key and secret key).
+3. **GitHub Actions Secrets** configured in your repository:
+   - `AWS_ACCESS_KEY_ID`: Your AWS access key
+   - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
+   - `AWS_ACCOUNT_ID`: Your AWS account ID (12-digit number)
 
 ## Setup Instructions
 
-### 1. GitHub Actions Workflows
+### 1. Configure GitHub Secrets
 
-#### Workflow 1: Build Docker Image on Merge to Master
-Upon merging a PR into the `main` branch, the Docker image is automatically built and pushed to ECR.
+Before running any workflows, set up the required secrets in your GitHub repository:
 
-#### Workflow 2: Manual Lambda Deployment
-You can manually deploy a new version of the Lambda function by triggering the `deploy-lambda` workflow in GitHub Actions. You can specify a Docker image version (tag) or default to `latest`.
+Go to **Settings → Secrets and variables → Actions** and add:
+- `AWS_ACCESS_KEY_ID`: Your AWS access key
+- `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
+- `AWS_ACCOUNT_ID`: Your AWS account ID (12-digit number)
+
+### 2. Initial Infrastructure Deployment
+
+1. **Manually trigger** the Deploy Lambda workflow from GitHub Actions
+2. **Enter version**: `latest` (for initial deployment)
+3. The workflow will:
+   - Create S3 bucket: `lambda-s3-docker-demo-storage`
+   - Create ECR repository: `lambda-s3-docker-demo-ecr`
+   - Create Lambda function: `lambda-s3-docker-demo`
+   - Create IAM roles and policies
+
+**Note**: The first deployment may fail because the ECR repository will be empty. This is expected.
+
+### 3. Build and Push Docker Image
+
+1. **Create a Pull Request** with any change (or an empty commit)
+2. **Merge the PR** to `main`
+3. The Build workflow automatically runs and pushes the Docker image to ECR
+
+### 4. Deploy Lambda with Docker Image
+
+1. **Manually trigger** the Deploy Lambda workflow again
+2. **Enter version**: `latest`
+3. Lambda function is now fully deployed and functional! 🚀
+
+### 5. GitHub Actions Workflows
+
+#### Workflow 1: Build and Push Docker Image
+- **Trigger**: Automatically runs when a PR is merged to `main` branch
+- **What it does**: 
+  - Builds the Docker image
+  - Pushes to ECR with `latest` tag
+- **File**: `.github/workflows/docker-build.yml`
+
+#### Workflow 2: Deploy Lambda Function
+- **Trigger**: Manually triggered via GitHub Actions UI
+- **What it does**: 
+  - Runs Terraform to update Lambda function with specified version
+  - Outputs the Lambda Function URL
+- **File**: `.github/workflows/lambda-deploy.yml`
+- **Input**: `version` - The Lambda version to deploy (default: `latest`)
+  - Can use semantic versioning: `v1.0.0`, `v2.1.3`
+  - Or use `latest` to deploy the most recent build
+
+#### Workflow 3: Cleanup Resources
+- **Trigger**: Manually triggered via GitHub Actions UI
+- **What it does**: 
+  - Empties the S3 bucket
+  - Deletes ECR images
+  - Destroys all Terraform-managed infrastructure
+- **File**: `.github/workflows/cleanup.yml`
+- **Input**: `confirm` - Type `destroy` to confirm deletion (safety measure)
+
+## Deployment Flow
+
+1. **Make code changes** in a feature branch
+2. **Create a Pull Request** to `main`
+3. **Merge the PR** - Build workflow automatically runs and pushes Docker image
+4. **Manually trigger** the deploy workflow
+5. **Enter a version** (e.g., `v1.0.0`) or use `latest`
+6. **Lambda is updated** with the new version
 
 ## Usage
 
-### Trigger the Lambda Function
-Once the Terraform deployment is complete, you can find the Lambda Function URL in the AWS Console or the Terraform output. Send an HTTP GET request to the function URL to retrieve the contents of the file from the S3 bucket.
+### Upload a Test File to S3
 
-Example:
+You can upload a test file using AWS CLI (if you have it installed locally) or through the AWS Console:
+
+**Using AWS CLI**:
 ```bash
-curl https://<lambda-function-url>
+echo "Hello from S3!" > test.txt
+aws s3 cp test.txt s3://lambda-s3-docker-demo-storage/test.txt
 ```
 
-## GitHub Actions Setup
+**Using AWS Console**:
+1. Go to S3 in AWS Console
+2. Navigate to bucket `lambda-s3-docker-demo-storage`
+3. Upload a file (e.g., `test.txt`)
 
-Ensure the following secrets are set up in your GitHub repository:
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_ACCOUNT_ID`
+### Trigger the Lambda Function
+
+Get the Lambda Function URL from the Deploy workflow output, then send a GET request:
+```bash
+curl "https://<lambda-function-url>?bucket=lambda-s3-docker-demo-storage&file_key=test.txt"
+```
+
+Expected response:
+```json
+"Hello from S3!"
+```
+
+## Cleanup
+
+To remove all resources and avoid charges:
+
+### Using GitHub Actions (Recommended)
+
+1. Go to **Actions** tab in GitHub
+2. Select **Cleanup Resources** workflow
+3. Click **Run workflow**
+4. Type `destroy` in the confirmation field
+5. Click **Run workflow**
+
+The workflow will:
+- Empty the S3 bucket
+- Delete all ECR images
+- Destroy all Terraform-managed resources (Lambda, IAM roles, etc.)
+
+### Manual Cleanup (Alternative)
+
+**Using AWS CLI**:
+```bash
+# Empty the S3 bucket first
+aws s3 rm s3://lambda-s3-docker-demo-storage --recursive
+
+# Then manually delete resources through AWS Console or run terraform destroy locally
+```
+
+**Using AWS Console**:
+1. Empty and delete the S3 bucket
+2. Delete the Lambda function
+3. Delete the ECR repository
+4. Delete the IAM role
+
+**Note**: ECR images and CloudWatch logs may incur small charges (~$0.06-0.10/month).
