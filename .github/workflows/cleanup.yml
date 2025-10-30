@@ -1,0 +1,58 @@
+name: Cleanup Resources
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "destroy" to confirm deletion of all resources'
+        required: true
+        type: string
+
+# Required for OIDC authentication
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'destroy'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-central-1
+
+      - name: Empty S3 bucket
+        run: |
+          echo "Emptying S3 bucket..."
+          aws s3 rm s3://lambda-s3-docker-demo-storage --recursive || echo "Bucket already empty or doesn't exist"
+
+      - name: Delete ECR images
+        run: |
+          echo "Deleting ECR images..."
+          aws ecr batch-delete-image \
+            --repository-name lambda-s3-docker-demo-ecr \
+            --image-ids imageTag=latest \
+            --region eu-central-1 || echo "No images to delete or repository doesn't exist"
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Destroy infrastructure
+        run: terraform destroy -auto-approve
+
+      - name: Cleanup complete
+        run: |
+          echo "✅ All resources have been destroyed"
+          echo "⚠️  Please verify in AWS Console that all resources are removed"

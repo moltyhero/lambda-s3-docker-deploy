@@ -1,12 +1,25 @@
 import json
 import boto3
-import os
 
 s3_client = boto3.client('s3')
 
 def lambda_handler(event, context):
-    bucket_name = os.getenv('S3_BUCKET')
-    file_key = event.get('queryStringParameters', {}).get('file_key')  # Get file_key from request
+    # Get parameters from query string
+    params = event.get('queryStringParameters', {})
+    bucket_name = params.get('bucket')
+    file_key = params.get('file_key')
+    
+    if not bucket_name:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'error': 'bucket parameter is required'})
+        }
+    
+    if not file_key:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'error': 'file_key parameter is required'})
+        }
 
     try:
         response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
