@@ -70,7 +70,7 @@ Attach these AWS managed policies:
 }
 ```
 
-**For sharing with collaborators or allowing forks (recommended):**
+**For sharing with collaborators or allowing forks:**
 ```json
 {
   "Version": "2012-10-17",
@@ -243,7 +243,7 @@ For production use, replace the AWS managed policies with this custom policy:
 }
 ```
 
-## Alternative: Using Secrets (Legacy)
+## Alternative: Using Secrets
 
 If you prefer using traditional AWS access keys, switch to the `secrets-auth` branch:
 
