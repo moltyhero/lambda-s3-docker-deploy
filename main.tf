@@ -118,7 +118,7 @@ resource "aws_lambda_function_url" "file_reader_url" {
 # Outputs
 output "lambda_function_url" {
   description = "URL endpoint for the Lambda function"
-  value       = aws_lambda_function_url.file_reader_url.url
+  value       = aws_lambda_function_url.file_reader_url.function_url
 }
 
 output "ecr_repository_url" {
