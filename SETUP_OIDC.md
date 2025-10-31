@@ -205,6 +205,8 @@ If they want to deploy to **their own** AWS account:
 
 For production use, replace the AWS managed policies with this custom policy:
 
+**Note:** This policy includes permissions for Terraform to store its state in an S3 backend.
+
 ```json
 {
   "Version": "2012-10-17",
@@ -220,6 +222,15 @@ For production use, replace the AWS managed policies with this custom policy:
         "s3:ListBucket",
         "s3:PutBucketVersioning",
         "s3:GetBucketVersioning",
+        "s3:GetBucketPolicy",
+        "s3:PutBucketPolicy",
+        "s3:DeleteBucketPolicy",
+        "s3:GetBucketTagging",
+        "s3:PutBucketTagging",
+        "s3:GetBucketAcl",
+        "s3:PutBucketAcl",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:PutBucketPublicAccessBlock",
         "ecr:CreateRepository",
         "ecr:DeleteRepository",
         "ecr:DescribeRepositories",
@@ -231,6 +242,12 @@ For production use, replace the AWS managed policies with this custom policy:
         "ecr:CompleteLayerUpload",
         "ecr:GetAuthorizationToken",
         "ecr:DescribeImages",
+        "ecr:ListTagsForResource",
+        "ecr:TagResource",
+        "ecr:UntagResource",
+        "ecr:PutImageScanningConfiguration",
+        "ecr:GetLifecyclePolicy",
+        "ecr:PutLifecyclePolicy",
         "lambda:CreateFunction",
         "lambda:DeleteFunction",
         "lambda:UpdateFunctionCode",
@@ -239,6 +256,9 @@ For production use, replace the AWS managed policies with this custom policy:
         "lambda:CreateFunctionUrlConfig",
         "lambda:DeleteFunctionUrlConfig",
         "lambda:GetFunctionUrlConfig",
+        "lambda:TagResource",
+        "lambda:UntagResource",
+        "lambda:ListTags",
         "iam:CreateRole",
         "iam:DeleteRole",
         "iam:AttachRolePolicy",
@@ -248,9 +268,16 @@ For production use, replace the AWS managed policies with this custom policy:
         "iam:DeleteRolePolicy",
         "iam:ListAttachedRolePolicies",
         "iam:ListRolePolicies",
+        "iam:GetRolePolicy",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:ListRoleTags",
         "logs:CreateLogGroup",
         "logs:DeleteLogGroup",
-        "logs:DescribeLogGroups"
+        "logs:DescribeLogGroups",
+        "logs:ListTagsLogGroup",
+        "logs:TagLogGroup",
+        "logs:UntagLogGroup"
       ],
       "Resource": "*"
     },

@@ -6,6 +6,13 @@ terraform {
     }
   }
   required_version = ">= 1.0"
+  
+  # Store Terraform state in S3 backend
+  backend "s3" {
+    bucket = "terraform-state-lambda-s3-docker"
+    key    = "lambda-deploy/terraform.tfstate"
+    region = "eu-central-1"
+  }
 }
 
 provider "aws" {

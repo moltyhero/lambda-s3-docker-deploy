@@ -59,5 +59,15 @@ jobs:
 
       - name: Cleanup complete
         run: |
-          echo "✅ All resources have been destroyed"
+          echo "✅ All application resources have been destroyed"
+          echo "📦 The following were deleted:"
+          echo "  - Lambda function and function URL"
+          echo "  - S3 bucket (lambda-s3-docker-demo-storage)"
+          echo "  - ECR repository and images"
+          echo "  - IAM roles and policies"
+          echo ""
+          echo "🔒 The following were NOT deleted (by design):"
+          echo "  - Terraform state bucket (terraform-state-lambda-s3-docker)"
+          echo "  - OIDC provider and GitHub Actions role"
+          echo ""
           echo "⚠️  Please verify in AWS Console that all resources are removed"

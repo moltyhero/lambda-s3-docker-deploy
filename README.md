@@ -45,7 +45,18 @@ Follow the complete step-by-step guide in **[SETUP_OIDC.md](SETUP_OIDC.md)** to:
 
 **Prefer using access keys?** Switch to the `secrets-auth` branch for the traditional approach.
 
-### 2. Initial Infrastructure Deployment
+### 2. Create Terraform State Bucket (One-Time Setup)
+
+Terraform needs an S3 bucket to store its state between workflow runs.
+
+Follow the quick setup guide in **[TERRAFORM_STATE.md](TERRAFORM_STATE.md)** to:
+
+1. Create an S3 bucket named `terraform-state-lambda-s3-docker`
+2. Enable versioning (recommended)
+
+**This is required** - without it, you'll get "already exists" errors on subsequent deployments.
+
+### 3. Initial Infrastructure Deployment
 
 1. **Manually trigger** the Deploy Lambda workflow from GitHub Actions
 2. **Enter version**: `latest` (for initial deployment)
