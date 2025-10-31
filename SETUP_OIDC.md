@@ -28,7 +28,13 @@ This guide shows how to set up AWS IAM OIDC provider to allow GitHub Actions to 
 3. Select **Web identity**
 4. Identity provider: `token.actions.githubusercontent.com`
 5. Audience: `sts.amazonaws.com`
-6. Click **Next**
+6. **Fill in GitHub details** (recommended for security):
+   - **GitHub organization**: Your GitHub username
+   - **GitHub repository**: `lambda-s3-docker-deploy` 
+   - **GitHub branch**: `main`
+   
+   *Note: These settings restrict the role to only your specific repo and branch. The wizard will auto-generate a secure trust policy based on these values.*
+7. Click **Next**
 
 ### Step 3: Attach Permissions
 
@@ -42,6 +48,14 @@ Attach these AWS managed policies:
 **Or** create a custom policy with least privilege (see below for recommended policy).
 
 ### Step 4: Configure Trust Policy
+
+**If you used the wizard and filled in GitHub details in Step 2:**
+- AWS will auto-generate the trust policy for you
+- Review it to ensure it looks similar to the examples below
+- Your generated policy will include `ref:refs/heads/main` which is more restrictive and secure
+- No need to edit manually - the wizard did it for you! ✅
+
+**If you need to edit or create the trust policy manually:**
 
 1. On the **Trust relationships** tab, edit the trust policy
 2. Replace with this policy (update with your GitHub username and repo):
@@ -125,6 +139,8 @@ Attach these AWS managed policies:
 - `YOUR_ACCOUNT_ID` with your AWS account ID
 - `YOUR_GITHUB_USERNAME` with your GitHub username
 - `COLLABORATOR_GITHUB_USERNAME` with your collaborator's username
+
+**Note:** If you used the AWS wizard in Step 2, you likely don't need to modify the trust policy - it was already configured correctly!
 
 3. Name the role: `GitHubActionsLambdaDeploy`
 4. Click **Create role**
@@ -228,7 +244,6 @@ For production use, replace the AWS managed policies with this custom policy:
         "iam:AttachRolePolicy",
         "iam:DetachRolePolicy",
         "iam:GetRole",
-        "iam:PassRole",
         "iam:PutRolePolicy",
         "iam:DeleteRolePolicy",
         "iam:ListAttachedRolePolicies",
@@ -238,6 +253,16 @@ For production use, replace the AWS managed policies with this custom policy:
         "logs:DescribeLogGroups"
       ],
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "lambda.amazonaws.com"
+        }
+      }
     }
   ]
 }
