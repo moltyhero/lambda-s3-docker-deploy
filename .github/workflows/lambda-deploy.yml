@@ -39,13 +39,13 @@ jobs:
 
       - name: Plan Terraform deployment
         env:
-          TF_VAR_image_tag: ${{ github.event.inputs.version }}
+          TF_VAR_image_tag: latest
           TF_VAR_aws_region: ${{ env.AWS_REGION }}
         run: terraform plan
 
       - name: Apply Terraform deployment
         env:
-          TF_VAR_image_tag: ${{ github.event.inputs.version }}
+          TF_VAR_image_tag: latest
           TF_VAR_aws_region: ${{ env.AWS_REGION }}
         run: terraform apply -auto-approve
 
@@ -53,4 +53,5 @@ jobs:
         run: |
           FUNCTION_URL=$(terraform output -raw lambda_function_url)
           echo "🚀 Lambda Function URL: $FUNCTION_URL"
-          echo "📦 Deployed version: ${{ github.event.inputs.version }}"
+          echo "📦 Deployment version label: ${{ github.event.inputs.version }}"
+          echo "🐳 Docker image tag: latest"
