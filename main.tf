@@ -93,6 +93,34 @@ resource "aws_iam_role_policy" "lambda_s3_policy" {
   })
 }
 
+# IAM Policy for Lambda to pull images from ECR
+resource "aws_iam_role_policy" "lambda_ecr_policy" {
+  name = "${var.project_name}-ecr-policy"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:BatchCheckLayerAvailability"
+        ]
+        Resource = aws_ecr_repository.lambda_image.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecr:GetAuthorizationToken"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # CloudWatch Logs policy in case we want to troubleshoot later
 resource "aws_iam_role_policy_attachment" "lambda_logs" {
   role       = aws_iam_role.lambda_role.name
