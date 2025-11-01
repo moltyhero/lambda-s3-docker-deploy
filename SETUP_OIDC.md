@@ -303,6 +303,7 @@ For production use, replace the AWS managed policies with this custom policy:
         "iam:ListAttachedRolePolicies",
         "iam:ListRolePolicies",
         "iam:GetRolePolicy",
+        "iam:ListInstanceProfilesForRole",
         "iam:TagRole",
         "iam:UntagRole",
         "iam:ListRoleTags",

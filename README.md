@@ -163,6 +163,8 @@ The workflow will:
 - Delete all ECR images
 - Destroy all Terraform-managed resources (Lambda, IAM roles, etc.)
 
+**Note**: The Terraform state bucket (`terraform-state-lambda-s3-docker`) is NOT deleted by this workflow and must be manually deleted if you want to remove all resources. This bucket stores Terraform state and is kept to allow future deployments.
+
 ### Manual Cleanup (Alternative)
 
 **Using AWS CLI**:
