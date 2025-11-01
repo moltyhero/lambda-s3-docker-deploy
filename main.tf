@@ -52,6 +52,29 @@ resource "aws_ecr_repository" "lambda_image" {
   }
 }
 
+# ECR Repository Policy to allow Lambda to pull images
+resource "aws_ecr_repository_policy" "lambda_access" {
+  repository = aws_ecr_repository.lambda_image.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "LambdaECRImageRetrievalPolicy"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = [
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:BatchCheckLayerAvailability"
+        ]
+      }
+    ]
+  })
+}
+
 # IAM Role for Lambda
 resource "aws_iam_role" "lambda_role" {
   name = "${var.project_name}-lambda-role"
